@@ -14,6 +14,7 @@
   tasks:
   - name:  "Including AWS Credentials"
     include_vars: ../credentials/aws_creds.yml
+    no_log: true
   
   - name: "Generating Instance Key"
     ec2_key:
