@@ -4,43 +4,8 @@
   become: true
   user: ec2-user
   vars:
-    - code_repo: "https://github.com/riteshsoni10/demo_website.git"
-    - ansible_ssh_private_key_file: "../credentials/ec2_instance_key.pem"
-
-  tasks:
-  - name: "Install Apache Web Server" 
-    yum:
-      name: ['httpd','git']
-      state: present
-  
-  - name: "Clearing Code Directory"
-    file:
-      path: /var/www/html/web
-      state: absent    
-    ignore_errors: true
-  
-  - name: "Create Code Directory"
-    file:
-      path: /var/www/html/web
-      state: directory    
-  
-  - name: "Copy Web Server code"
-    git:
-      repo: "{{ code_repo }}"
-      dest: /var/www/html/web/    
-
-  - name: "Disable SElinux"
-    shell: "setenforce 0"
-      
-  - name: "Configure Web Server"
-    copy:
-      src: ../web_server_configuration/web_server.conf
-      dest: /etc/httpd/conf.d/
-    notify: Restart Apache Server
-
-  handlers:  
-  - name: Restart Apache Server
-    systemd:
-      name: httpd
-      state: restarted
-
+    - ansible_ssh_private_key_file: "ec2_instance_key.pem"
+  roles:
+    - web_server
+  post_tasks:
+     - include_tasks: web_server/tests/test.yml
