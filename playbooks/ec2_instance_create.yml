@@ -10,11 +10,9 @@
     - subnet_id: "subnet-07000c6f"
     - vpc_id: "vpc-612dca0a"
     - vault_id: "prod@vault_pass"
-    
   tasks:
   - name:  "Including AWS Credentials"
-    include_vars: ../credentials/aws_creds.yml
-    no_log: true
+    include_vars: aws_creds.yml
   
   - name: "Generating Instance Key"
     ec2_key:
@@ -90,13 +88,13 @@
   - name: "Refreshing Inventory"
     meta: refresh_inventory
 
+   
   handlers:
   - name: "Store Instance Key"
     local_action:
       module: copy
       content: "{{ key_data.key.private_key }}"
-      dest: ../credentials/ec2_instance_key.pem
+      dest: ec2_instance_key.pem
       mode: 0400
-
 
 
