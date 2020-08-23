@@ -20,7 +20,7 @@ Two different playbooks are created for both the tasks and invoked using `import
 
 Ansible Configuration Tool is configured with the custom parameters in configuration file i.e *ansible.cfg*. The path for inventory has been upadted to the dynamic inventory script ec2.py. The AWS Credentials are configured in `ec2.ini` for accessing the resources in Amazon Web Services. The file can be used to customise the dynamic inventory script for EC2 instances.
 
-The AWS credentials i.e; access_key and secret_key is to be assigned in ec2.ini at the end of file:
+The AWS credentials i.e; access_key and secret_key is to be assigned in `ec2.ini` at the end of file:
 ```
 [credentials]
 aws_access_key_id = XXXXXXXXXXXXXXXXX
