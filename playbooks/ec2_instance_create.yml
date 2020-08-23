@@ -1,0 +1,101 @@
+---
+- hosts: localhost
+  gather_facts: false
+  become: true
+  vars:
+    - region_name: "ap-south-1"
+    - instance_type: "t2.micro"
+    - instance_ami: "ami-052c08d70def0ac62"
+    - number_of_instances: "1"
+    - subnet_id: "subnet-07000c6f"
+    - vpc_id: "vpc-612dca0a"
+    - vault_id: "prod@vault_pass"
+    
+  tasks:
+  - name:  "Including AWS Credentials"
+    include_vars: ../credentials/aws_creds.yml
+  
+  - name: "Generating Instance Key"
+    ec2_key:
+      aws_access_key: "{{ access_key }}"
+      aws_secret_key: "{{ secret_key }}"     
+      name: "ec2_instance_key"
+      region: "{{ region_name }}"
+    register: key_data
+    notify: Store Instance Key
+    tags: ['always']
+
+  - name: "Fetch Controller Node Public IP"  
+    shell: curl ifconfig.co
+    register: public_ip
+    tags: ['always']
+
+  - name: "Create Security Group"
+    ec2_group:
+      name: "allow_ssh_http_access"
+      description: "SSH and HTTP Port Access"
+      vpc_id: "{{ vpc_id }}"
+      region: "{{ region_name }}"
+      aws_secret_key: "{{ secret_key }}"
+      aws_access_key: "{{ access_key }}"
+      rules:
+        - proto: tcp
+          ports: 
+            - 80
+          cidr_ip: 0.0.0.0/0
+        - proto: tcp
+          ports:   
+            - 22
+          cidr_ip: "{{ public_ip.stdout }}/32"
+      rules_egress:
+        - proto: all
+          cidr_ip: 0.0.0.0/0
+    register: security_group_status
+    tags: ['always','security_group_create']
+
+  - name: "EC2 Instance Launch"
+    ec2:
+      aws_access_key: "{{ access_key }}"
+      aws_secret_key: "{{ secret_key }}"      
+      key_name: "{{ key_data.key.name }}" 
+      instance_type: "{{ instance_type }}"
+      image: "{{ instance_ami }}"
+      region: "{{ region_name }}"
+      state: present
+      wait: yes
+      wait_timeout: 500
+      count: "{{ number_of_instances }}"
+      group_id: "{{ security_group_status.group_id }}"
+      instance_tags:
+        Name: Web_Server 
+      vpc_subnet_id: "{{ subnet_id }}"
+      assign_public_ip: yes
+    tags: [ 'always','instance_launch' ] 
+    register: instance_launch_status
+    when: 
+      - key_data.failed == false
+      - security_group_status.failed == false
+    notify: Store Public IP
+
+  - name: "Waiting for the instance to be ready"
+    local_action:
+      module: wait_for
+      host:  "{{ item.public_ip }}"
+      port: 22
+      state: started
+    with_items:
+      - "{{ instance_launch_status.instances }}"
+
+  - name: "Refreshing Inventory"
+    meta: refresh_inventory
+
+  handlers:
+  - name: "Store Instance Key"
+    local_action:
+      module: copy
+      content: "{{ key_data.key.private_key }}"
+      dest: ../credentials/ec2_instance_key.pem
+      mode: 0400
+
+
+
