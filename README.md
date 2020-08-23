@@ -52,14 +52,33 @@ The ansible should be able to list out all *running* Amazon EC2 instances using 
   <em>Fig 2.: Ansible Hosts List</em>
 </p>
 
+The ansible configuration and dynamic inventories used in project are present in `ansible_configuration` directory for reference.
+
 
 ### Provisioning of Amazon EC2 Server 
 
 For provisioning of resources on Amazon Web Services, the programmatic credentials are configured and passed to the the tasks in playbook i.e *playbooks/ec2_instance_create.yml*. The credentials are encrypted using ansible-vault using vault-password file `vault_pass`.
 
+**Ansible-Vault file **
 
+Ansible Vault is a feature of ansible that allows you to keep sensitive data such as passwords or keys in encrypted files, rather than as plaintext in playbooks or roles. The AWS Credentials are stored in the vault file when used in tasks in playbook. The vault password is stored in `vault_pass` file. The data in aws_creds.yml file i.e access_key and secret_key are encrypted using ansible vault.
 
+```
+ansible-vault create --vault-id prod@vault_pass aws_creds.yml
+```
 
+Raw plain text data before encryption of aws_creds.yml
+```
+aws_creds.yml
+---
+access_key: AWSDEFSFSEFSDAWDA
+secret_key: askdgaaiugff093lkkna+asdasd
+```
 
+<p align="center">
+  <img src="/screenshots/aws_vault_creds.png" width="950" title="Envrypted data">
+  <br>
+  <em>Fig 3.: Encrypted Credentials </em>
+</p>
 
 
