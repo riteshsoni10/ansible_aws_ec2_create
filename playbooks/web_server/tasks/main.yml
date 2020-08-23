@@ -1,0 +1,46 @@
+---
+# tasks file for web_server
+- name: "Apache | Install Packages"
+  yum:
+    name: "{{ packages_list }}"
+    state: present
+
+- name: "Apache | Clearing Application Root Directory"
+  file:
+    path: "{{ application_root_directory }}"
+    state: absent
+  ignore_errors: true
+
+- name: "Apache | Create Application Root Directory"
+  file:
+    path: "{{ application_root_directory }}"
+    state: directory
+
+- name: "Apache | Deploy Application"
+  git:
+    repo: "{{ code_repo }}"
+    dest:  "{{ application_root_directory }}"
+
+- name: "Firewall | Disable SElinux"
+  shell: "setenforce 0"
+
+- name: "Firewall | Permanent disable SELinux"
+  selinux:
+    state: disabled
+
+- name: "Apache | Configure Web Server"
+  template:
+    src: web_server.conf.j2
+    dest: "{{ tmp_apache_configuration_file }}"
+
+- name: "Apache | Listen Port not 80 Check"
+  replace:
+    path:  "{{ tmp_apache_configuration_file }}"
+    regexp: '^Listen.*$'
+    replace: ' '
+  when:  http_port == 80
+
+- name: "Apache | Server Start"
+  systemd:
+    name: httpd
+    state: started  

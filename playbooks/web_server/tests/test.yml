@@ -1,0 +1,48 @@
+---
+- name: Apache | Test Updated hosts
+  template: 
+    src: "config-test.conf.j2" 
+    dest: "/tmp/config-test.conf"
+    mode: 0644
+    owner: root
+    group: root
+    validate: 'httpd -t -f %s'
+  register: apache_result
+  ignore_errors: true
+
+- name: "Clear out test file"
+  file: 
+    path: "/tmp/config-test.conf"
+    state: absent
+  ignore_errors: true
+
+- name: "Apache | Enable host"
+  copy:
+    src: "{{ tmp_apache_configuration_file }}"
+    dest: "{{ apache_configuration_file }}"
+    remote_src: yes  
+  when:  apache_result.failed == false
+  register: enable_config
+
+- name: "Apache | Server Restart"
+  systemd: 
+    name: httpd
+    state: restarted
+  when: enable_config.changed == true
+
+- name: "Clear out Config file"
+  file:
+    path: "{{ tmp_apache_configuration_file }}"
+    state: absent
+  ignore_errors: true
+
+
+- name: "Apache | Configuaration Failed"
+  fail: msg="Apache configuration is invalid. Please check before re-running the playbook."
+  when: apache_result.failed == true
+
+- name: "Application | Test Application "
+  local_action:
+    module: uri
+    url: "http://{{ ec2_ip_address }}"
+
