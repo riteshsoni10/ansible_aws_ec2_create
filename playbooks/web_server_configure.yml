@@ -4,7 +4,7 @@
   become: true
   user: ec2-user
   vars:
-    - ansible_ssh_private_key_file: "ec2_instance_key.pem"
+    - ansible_ssh_private_key_file: "../credentials/ec2_instance_key.pem"
   roles:
     - web_server
   post_tasks:
