@@ -4,7 +4,7 @@ The resource provisioning in Amazon Web Services utilising various ansible modul
 **Project Flow Diagram**
 
 <p align="center">
-  <img src="/screenshots/infra_flow.jpeg" width="950" title="Infra Diragram">
+  <img src="/screenshots/infra_flow.jpg" width="950" title="Infra Diragram">
   <br>
   <em>Fig 1.: Project Flow Diagram </em>
 </p>
